@@ -17,9 +17,12 @@ class Name(Field):
 
 class Phone(Field):
     def __init__(self, value):
-        self.value = value
+        if self.__is_phone_number(value):
+            self.value = value
+        else:
+            raise ValueError
 
-    def is_phone_number(self, value):
+    def __is_phone_number(self, value):
         self.value = value
         digits = re.findall(r"\d+", self.value)
         number = ""
@@ -37,9 +40,7 @@ class Record:
         self.phones = []
 
     def add_phone(self, number):
-        self.phone = Phone(number)
-        if self.phone.is_phone_number:
-            self.phones.append(self.phone)
+        self.phones.append(Phone(number))
 
     def remove_phone(self, number):
         for phone in self.phones:
@@ -49,42 +50,36 @@ class Record:
     def edit_phone(self, old_number, new_number):
         for phone in self.phones:
             if phone.value == old_number:
-                phone.value = new_number
+                self.phones[self.phones.index(phone)] = Phone(new_number)
 
     def find_phone(self, number):
         for phone in self.phones:
             if phone.value == number:
-                return number
+                return phone
 
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
 
 
 class AddressBook(UserDict):
-    def __init__(self):
-        self.data = UserDict()
-
     def add_record(self, record):
-        self.data[record.name] = record
+        self.data[record.name.value] = record
 
     def find(self, name):
         for key, val in self.data.items():
-            if key.value == name:
+            if key == name:
                 return val
 
     def delete(self, name):
         for key in self.data:
-            if key.value == name:
+            if key == name:
                 store = key
         self.data.pop(store)
 
     def __str__(self):
         s = ""
-        for key in self.data:
-            name = key
-            value = self.data[key]
-            phones = value.phones
-            s += f"Contact name: {name.value}, phones: {'; '.join(p.value for p in phones)}\n"
+        for rec in self.data.values():
+            s += f"{rec}\n"
         return s
 
 
@@ -101,7 +96,7 @@ book.add_record(john_record)
 
 # Створення та додавання нового запису для Jane
 jane_record = Record("Jane")
-jane_record.add_phone("9876543210")
+jane_record.add_phone("9876543215")
 book.add_record(jane_record)
 
 # Виведення всіх записів у книзі - два варіанти
